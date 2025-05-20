@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:student_chatbot/pages/signup_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -27,8 +28,12 @@ class _LoginPageState extends State<LoginPage> {
                 Padding(
                   padding: EdgeInsets.only(bottom: 100),
                   child: Text(
-                    "Student chatbot",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
+                    "StudentChat",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 25,
+                      fontFamily: "Roboto",
+                    ),
                   ),
                 ),
 
@@ -69,37 +74,99 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   onEditingComplete: () => setState(() {}),
                 ),
-
-                SizedBox(height: 25),
+                SizedBox(height: 5),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    children: [
+                      Text(
+                        "Forgot Password? ",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        "Click here",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 5),
                 FilledButton(
                   onPressed: () {},
-                  child: Text("Login"),
+
                   style: FilledButton.styleFrom(
                     minimumSize: Size(double.infinity, 50),
                     backgroundColor: Colors.black,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
+                  child: Text("Login", style: TextStyle(fontSize: 16)),
                 ),
-                SizedBox(height: 10),
-                ElevatedButton(
-                    onPressed: () {},
-                    child: Text("Signup"),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: Size(double.infinity, 50),
 
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                SizedBox(height: 25),
+                Row(
+                  children: [
+                    // Line bên trái
+                    Expanded(
+                      child: Divider(
+                        thickness: 1, // độ dày line
+                        color: Colors.grey[400], // màu line
                       ),
                     ),
 
+                    // Text ở giữa với padding ngang
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text(
+                        'Don\'t have an account?',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+
+                    // Line bên phải
+                    Expanded(
+                      child: Divider(thickness: 1, color: Colors.grey[400]),
+                    ),
+                  ],
                 ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return SignupPage();
+                        },
+                      ),
+                    );
+                  },
 
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(double.infinity, 50),
 
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text("Create Account", style: TextStyle(fontSize: 16)),
+                ),
               ],
             ),
           ),
