@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:student_chatbot/pages/home_page.dart';
 import 'package:student_chatbot/pages/signup_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -55,6 +56,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   onEditingComplete: () => setState(() {}),
                 ),
+
                 SizedBox(height: 15),
                 TextField(
                   decoration: InputDecoration(
@@ -74,7 +76,8 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   onEditingComplete: () => setState(() {}),
                 ),
-                SizedBox(height: 5),
+
+                SizedBox(height: 8),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Row(
@@ -98,9 +101,14 @@ class _LoginPageState extends State<LoginPage> {
                     ],
                   ),
                 ),
-                SizedBox(height: 5),
+
+                SizedBox(height: 8),
                 FilledButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) {
+                      return HomePage();
+                    },));
+                  },
 
                   style: FilledButton.styleFrom(
                     minimumSize: Size(double.infinity, 50),

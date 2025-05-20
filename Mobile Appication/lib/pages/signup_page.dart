@@ -34,7 +34,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
 
                       Text(
-                        "Welcome to StudentChat",
+                        "Welcome to StudentChat!",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 25,
@@ -43,7 +43,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
 
                       Text(
-                        "Sign up to get started",
+                        "Sign up and get started",
                         style: TextStyle(
                           fontWeight: FontWeight.normal,
                           fontSize: 15,
@@ -171,7 +171,7 @@ class _SignupPageState extends State<SignupPage> {
                           style: TextStyle(fontSize: 16),
                         ),
                       ),
-                      SizedBox(height: 25),
+                      SizedBox(height: 15),
                       ElevatedButton.icon(
                         onPressed: () {
                           // xử lý login với Google
