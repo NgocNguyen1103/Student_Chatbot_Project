@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/chat_session.dart';
 import '../models/chat_message.dart';
 import './chat_page.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -16,14 +17,12 @@ class _HomePageState extends State<HomePage> {
   void _openSession(ChatSession session) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => ChatPage(session: session),
-      ),
+      MaterialPageRoute(builder: (_) => ChatPage(session: session)),
     );
   }
 
   void _sendMessage() {
-    final text = _controller.text.trim();
+    final text = _controller.text.trim(); 
     if (text.isEmpty) return;
 
     final session = ChatSession(
@@ -38,13 +37,9 @@ class _HomePageState extends State<HomePage> {
 
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => ChatPage(session: session),
-      ),
+      MaterialPageRoute(builder: (_) => ChatPage(session: session)),
     );
   }
-
-
 
   void _deleteSession(int index) {
     setState(() {
@@ -56,13 +51,21 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('StudentChat'),
-        centerTitle: true,
-
+        title: Padding(
+          padding: EdgeInsets.only(left: 52.0),
+          child: Row(
+            children: [
+              Image.asset(
+                "assets/images/white_try_logo.png",
+                width: 40,
+                height: 40,
+              ),
+              Text('StudentChat', style: TextStyle(fontWeight: FontWeight.bold),),
+            ],
+          ),
+        ),
       ),
-      drawer: Drawer(
-
-      ),
+      drawer: Drawer(),
       body: Column(
         children: [
           Expanded(
@@ -85,10 +88,11 @@ class _HomePageState extends State<HomePage> {
                         _deleteSession(i);
                       }
                     },
-                    itemBuilder: (_) => [
-                      PopupMenuItem(value: 'open', child: Text("Open")),
-                      PopupMenuItem(value: 'delete', child: Text('Delete')),
-                    ],
+                    itemBuilder:
+                        (_) => [
+                          PopupMenuItem(value: 'open', child: Text("Open")),
+                          PopupMenuItem(value: 'delete', child: Text('Delete')),
+                        ],
                   ),
                 );
               },
@@ -113,7 +117,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.send, color: Theme.of(context).primaryColor),
+                  icon: Icon(Icons.send, color: Colors.black),
                   onPressed: _sendMessage,
                 ),
               ],
@@ -124,6 +128,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
-
-

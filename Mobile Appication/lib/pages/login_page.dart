@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:student_chatbot/pages/home_page.dart';
 import 'package:student_chatbot/pages/signup_page.dart';
+import 'package:student_chatbot/services/auth_services.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -10,6 +11,36 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  bool _loading = false;
+  bool _error = false;
+
+  void _login() async {
+    setState(() {
+      _loading = true;
+      _error = false;
+    });
+    final token = await AuthService().login(_email.text, _password.text);
+    setState(() {
+      _loading = false;
+    });
+    if (token != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) {
+            return HomePage();
+          },
+        ),
+      );
+    }else{
+      setState(() {
+        _error = true;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,6 +70,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
 
                 TextField(
+                  controller: _email,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
@@ -59,6 +91,7 @@ class _LoginPageState extends State<LoginPage> {
 
                 SizedBox(height: 15),
                 TextField(
+                  controller: _password,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
@@ -104,11 +137,7 @@ class _LoginPageState extends State<LoginPage> {
 
                 SizedBox(height: 8),
                 FilledButton(
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) {
-                      return HomePage();
-                    },));
-                  },
+                  onPressed: _login,
 
                   style: FilledButton.styleFrom(
                     minimumSize: Size(double.infinity, 50),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:student_chatbot/pages/home_page.dart';
+import '../services/auth_services.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -8,6 +10,38 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
+  final _email = TextEditingController();
+  final _username = TextEditingController();
+  final _password = TextEditingController();
+  final _verifyPassword = TextEditingController();
+  bool _loading = false;
+  bool _error = false;
+
+  void _submit() async {
+    setState(() {
+      _loading = true;
+      _error = false;
+    });
+    final response = await AuthService().signup(
+      _email.text,
+      _username.text,
+      _password.text,
+      _verifyPassword.text
+    );
+    setState(() {
+      _loading = false;
+    });
+    if (response)
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) {
+            return HomePage();
+          },
+        ),
+      );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,6 +86,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       SizedBox(height: 50),
                       TextField(
+                        controller: _email,
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: Colors.white,
@@ -79,6 +114,7 @@ class _SignupPageState extends State<SignupPage> {
                       SizedBox(height: 15),
 
                       TextField(
+                        controller: _username,
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: Colors.white,
@@ -104,6 +140,8 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       SizedBox(height: 15),
                       TextField(
+                        controller: _password,
+                        obscureText: true,
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: Colors.white,
@@ -130,6 +168,8 @@ class _SignupPageState extends State<SignupPage> {
                       SizedBox(height: 15),
 
                       TextField(
+                        controller: _verifyPassword,
+
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: Colors.white,
@@ -155,45 +195,54 @@ class _SignupPageState extends State<SignupPage> {
                       ),
 
                       SizedBox(height: 25),
-                      FilledButton(
-                        onPressed: () {},
+                      if (_error)
+                        Text('Signup failed', style: TextStyle(color: Colors.red)),
 
-                        style: FilledButton.styleFrom(
-                          minimumSize: Size(double.infinity, 50),
-                          backgroundColor: Colors.black,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: Text(
-                          "Create Account",
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
-                      SizedBox(height: 15),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          // xử lý login với Google
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black,
-                          minimumSize: Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        icon: Image.asset(
-                          'assets/images/gg_gen_logo.png',
-                          width: 30,
-                          height: 30,
-                        ),
-                        label: const Text(
-                          'Continue with Google',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
+                      _loading
+                          ? CircularProgressIndicator()
+                          : Column(
+                              children: [FilledButton(
+                                onPressed: _submit,
+                                child: Text(
+                                  "Create Account",
+                                  style: TextStyle(fontSize: 16),
+                                ),
+
+
+                                style: FilledButton.styleFrom(
+                                  minimumSize: Size(double.infinity, 50),
+                                  backgroundColor: Colors.black,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                                SizedBox(height: 15),
+
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    // xử lý login với Google
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Colors.black,
+                                    minimumSize: Size(double.infinity, 50),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  icon: Image.asset(
+                                    'assets/images/gg_gen_logo.png',
+                                    width: 30,
+                                    height: 30,
+                                  ),
+                                  label: const Text(
+                                    'Continue with Google',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                ),]
+                      )
                     ],
                   ),
                 ),
