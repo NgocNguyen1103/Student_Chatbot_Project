@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:student_chatbot/pages/home_page.dart';
 import 'package:student_chatbot/pages/login_page.dart';
+import 'package:student_chatbot/pages/signup_page.dart';
 
 void main() => runApp(const MyApp());
 
@@ -16,7 +18,12 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.light,
         ),
       ),
-      home: LoginPage(),
+      initialRoute: '/login',
+      routes: {
+        '/login': (context) => const LoginPage(),
+        '/signup': (context) => const SignupPage(),
+        '/home': (context) => const HomePage(),
+      },
     );
   }
 }

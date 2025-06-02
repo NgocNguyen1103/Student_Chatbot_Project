@@ -26,13 +26,10 @@ class _LoginPageState extends State<LoginPage> {
       _loading = false;
     });
     if (token != null) {
-      Navigator.push(
+      Navigator.pushReplacementNamed(
         context,
-        MaterialPageRoute(
-          builder: (context) {
-            return HomePage();
-          },
-        ),
+        '/home',
+        arguments: {"method": "email", "token": token}
       );
     }else{
       setState(() {

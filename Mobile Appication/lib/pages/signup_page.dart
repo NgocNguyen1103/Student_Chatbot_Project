@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:student_chatbot/pages/home_page.dart';
+import 'package:student_chatbot/pages/login_page.dart';
 import '../services/auth_services.dart';
 
 class SignupPage extends StatefulWidget {
@@ -26,20 +27,18 @@ class _SignupPageState extends State<SignupPage> {
       _email.text,
       _username.text,
       _password.text,
-      _verifyPassword.text
+      _verifyPassword.text,
     );
     setState(() {
       _loading = false;
     });
     if (response)
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) {
-            return HomePage();
-          },
-        ),
-      );
+      Navigator.pushReplacementNamed(context, '/login');
+    else{
+      setState(() {
+        _error = true;
+      });
+    }
   }
 
   @override
@@ -196,18 +195,21 @@ class _SignupPageState extends State<SignupPage> {
 
                       SizedBox(height: 25),
                       if (_error)
-                        Text('Signup failed', style: TextStyle(color: Colors.red)),
+                        Text(
+                          'Signup failed',
+                          style: TextStyle(color: Colors.red),
+                        ),
 
                       _loading
                           ? CircularProgressIndicator()
                           : Column(
-                              children: [FilledButton(
+                            children: [
+                              FilledButton(
                                 onPressed: _submit,
                                 child: Text(
                                   "Create Account",
                                   style: TextStyle(fontSize: 16),
                                 ),
-
 
                                 style: FilledButton.styleFrom(
                                   minimumSize: Size(double.infinity, 50),
@@ -218,31 +220,32 @@ class _SignupPageState extends State<SignupPage> {
                                   ),
                                 ),
                               ),
-                                SizedBox(height: 15),
+                              SizedBox(height: 15),
 
-                                ElevatedButton.icon(
-                                  onPressed: () {
-                                    // xử lý login với Google
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: Colors.black,
-                                    minimumSize: Size(double.infinity, 50),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  // xử lý login với Google
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: Colors.black,
+                                  minimumSize: Size(double.infinity, 50),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
-                                  icon: Image.asset(
-                                    'assets/images/gg_gen_logo.png',
-                                    width: 30,
-                                    height: 30,
-                                  ),
-                                  label: const Text(
-                                    'Continue with Google',
-                                    style: TextStyle(fontSize: 16),
-                                  ),
-                                ),]
-                      )
+                                ),
+                                icon: Image.asset(
+                                  'assets/images/gg_gen_logo.png',
+                                  width: 30,
+                                  height: 30,
+                                ),
+                                label: const Text(
+                                  'Continue with Google',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                              ),
+                            ],
+                          ),
                     ],
                   ),
                 ),
