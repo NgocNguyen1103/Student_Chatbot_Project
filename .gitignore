@@ -1,0 +1,19 @@
+# Ignore Python bytecode and virtual environment
+__pycache__/
+venv/
+
+# Ignore environment configuration files
+.env
+
+# Ignore Alembic migrations if not needed
+alembic/
+
+# Ignore log files
+*.log
+
+# Ignore database files
+*.sqlite3
+
+# Ignore system files (macOS, Windows)
+.DS_Store
+Thumbs.db

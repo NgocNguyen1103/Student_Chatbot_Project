@@ -3,13 +3,13 @@ import 'package:http/http.dart' as http;
 // import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
-  final String baseUrl = 'http://10.0.2.2:8000';
+  final String baseUrl = 'http://10.0.2.2:8000/auth';
 
   Future<bool> signup(String email, String username, String password, String verifyPassword) async {
     final res = await http.post(
       Uri.parse('$baseUrl/signup'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'username': username, 'password': password, 'verify_password': verifyPassword}),
+      body: jsonEncode({'email': email, 'user_name': username, 'password': password, 'verify_password': verifyPassword}),
     );
     return res.statusCode == 200;
   }
