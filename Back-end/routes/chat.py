@@ -7,6 +7,7 @@ from models.users import Users as UserModels
 from models.chat_sessions import ChatSessions
 from models.chat_messages import ChatMessages, RoleEnum
 import utils.security as Security
+from typing import List
 
 router = APIRouter(
     
@@ -67,3 +68,67 @@ def continue_chat(chat: SchemaChats.ChatContinue, db: Session = Depends(get_db),
     db.commit()
     db.refresh(new_message)
     return new_message
+
+
+@router.get('/get_chat_sessions', tags=['chat'], response_model=List[SchemaChats.ChatSessionOut])
+def get_sessions(db: Session = Depends(get_db), current_user: UserModels = Depends(Security.get_current_user)):
+    try:
+
+        chat_sessions = db.query(ChatSessions).filter(ChatSessions.user_id == current_user.id).all()
+
+        if not chat_sessions:
+            return {"message": "No Chat Session  available"}
+        
+        return chat_sessions
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+        # Trả về thông báo lỗi chung cho người dùng
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while fetching data"
+        )
+    
+
+@router.get('/get_old_messages/{chat_session_id}', tags=['chat'], response_model=List[SchemaChats.ChatMessageOut])
+def get_old_messages(chat_session_id: int,db: Session = Depends(get_db), current_user: UserModels = Depends(Security.get_current_user)):
+    try:
+        chat_session = (db.query(ChatSessions)
+                        .filter(
+                            ChatSessions.id == chat_session_id,
+                            ChatSessions.user_id == current_user.id
+                        )
+                        .first())
+        if not chat_session:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Chat session not found or you don't have access to it"
+            )
+        
+        messages = (db.query(ChatMessages)
+                    .filter(ChatMessages.chat_session_id == chat_session_id)
+                    .order_by(ChatMessages.sequence_no)
+                    .all())
+        
+        if not messages:
+            return {"message": "No message"}
+        
+        return messages
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+        # Trả về thông báo lỗi chung cho người dùng
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while fetching data"
+        )
+
+
+
+    
+
+
+
+    
+
+
