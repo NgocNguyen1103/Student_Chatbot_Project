@@ -26,7 +26,7 @@ def start_chat(chat: SchemaChats.ChatStart, db: Session= Depends(get_db), curren
         content = chat.content
     )
     db.add(first_message)
-    new_session.last_message = datetime.utcnow()
+    new_session.last_message = datetime.now()
 
     db.commit()
     db.refresh(new_session)
