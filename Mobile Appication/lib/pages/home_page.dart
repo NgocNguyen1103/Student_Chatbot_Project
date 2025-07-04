@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:student_chatbot/services/auth_services.dart';
+import 'package:student_chatbot/services/chat_services.dart';
 import '../models/chat_session.dart';
 import '../models/chat_message.dart';
 import './chat_page.dart';
@@ -15,40 +16,53 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _controller = TextEditingController();
   late String method;
   late String token;
+  bool _isSending = false;
   late Future<Map<String, dynamic>?> _profile;
   final List<ChatSession> _sessions = [];
+  late Future<List<ChatSession>> _sessionFuture;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchTerm = '';
+  List<ChatSession> _filteredSessions = [];
 
-  void _openSession(ChatSession session) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ChatPage(session: session)),
-    );
-  }
-
-  void _sendMessage() {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
-
-    final session = ChatSession(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      messages: [ChatMessage(text: text, isUser: true)],
-    );
-
+  void _sendMessage() async {
+    final content = _controller.text;
+    if (content.isEmpty) return;
     setState(() {
-      _sessions.insert(0, session);
+      _isSending = true; // Đánh dấu là đang gửi
     });
-    _controller.clear();
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ChatPage(session: session)),
-    );
-  }
+    // Gọi API tạo chat
+    try {
+      final response = await ChatService().startChat(content, token); // Gọi API
+      // final session = response['session'];  // session info
+      // final messages = response['message'];  // messages từ bot và user
 
-  void _deleteSession(int index) {
-    setState(() {
-      _sessions.removeAt(index);
-    });
+      // 1. Lấy phần `session` ra dưới dạng Map
+      final Map<String, dynamic> sessionJson =
+          response['session'] as Map<String, dynamic>;
+      // 2. Chuyển Map → ChatSession bằng factory constructor
+      final ChatSession session = ChatSession.fromJson(sessionJson);
+      print('Parsed session id: ${session.id}, title: ${session.title}');
+      // final List<dynamic> msgsJson = response['messages'] as List<dynamic>;
+      // final List<ChatMessage> messages = msgsJson
+      //     .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
+      //     .toList();
+      // Sau khi có response, mở ChatPage
+      _controller.clear();
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatPage(session: session, token: token),
+        ),
+      );
+    } catch (error) {
+      print("Error: $error");
+      // Bạn có thể hiển thị lỗi bằng snackbar nếu muốn
+    } finally {
+      setState(() {
+        _isSending = false; // ✅ Cho phép gửi lại
+      });
+    }
   }
 
   @override
@@ -59,6 +73,11 @@ class _HomePageState extends State<HomePage> {
     method = args['method'];
     token = args["token"];
     _profile = AuthService().getProfile(token);
+    _sessionFuture = ChatService().getSessions(token);
+    _sessionFuture = ChatService().getSessions(token).then((sessions) {
+      _filteredSessions = sessions; // Gán ban đầu
+      return sessions;
+    });
   }
 
   @override
@@ -83,9 +102,113 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       drawer: Drawer(
+        backgroundColor: Color(0xFFF7F9FB),
         child: Column(
           children: [
-            DrawerHeader(
+            Container(
+              alignment: Alignment.centerLeft,
+              padding: EdgeInsets.fromLTRB(16, 60, 0, 20),
+              child: Text(
+                'Chat History',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+
+            Expanded(
+              child: FutureBuilder<List<ChatSession>>(
+                future: _sessionFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState != ConnectionState.done)
+                    return Center(child: CircularProgressIndicator());
+                  if (snapshot.hasError) return Text("Error loading sessions");
+                  if (!snapshot.hasData || snapshot.data!.isEmpty)
+                    return Center(child: Text("No sessions"));
+
+                  // Cập nhật danh sách gốc và lọc theo search
+                  _sessions.clear();
+                  _sessions.addAll(snapshot.data!);
+
+                  final sessionsToShow =
+                      _searchTerm.isEmpty
+                          ? _sessions
+                          : _sessions.where((session) {
+                            return session.title.toLowerCase().contains(
+                              _searchTerm.toLowerCase(),
+                            );
+                          }).toList();
+
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: (value) {
+                            setState(() {
+                              _searchTerm = value;
+                            });
+                          },
+                          decoration: InputDecoration(
+                            hintText: 'Search sessions...',
+                            prefixIcon: Icon(Icons.search),
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      Expanded(
+                        child: ListView.builder(
+                          padding: EdgeInsets.zero,
+                          itemCount: sessionsToShow.length,
+                          itemBuilder: (context, index) {
+                            final session = sessionsToShow[index];
+                            return ListTile(
+                              title: Text(session.title),
+                              subtitle: Text("Session #${session.id}"),
+                              onTap: () {
+                                _searchController.clear();
+                                _searchTerm = '';
+                                Navigator.pop(context); // Close drawer
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (_) => ChatPage(
+                                          session: session,
+                                          token: token,
+                                        ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+
+            Container(
+              height: 65,
+              alignment: Alignment.center,
+
+              decoration: BoxDecoration(
+                color: Color(0xFFFDFEFF),
+                border: Border(top: BorderSide(color: Colors.grey.shade300)),
+              ),
               child: FutureBuilder<Map<String, dynamic>?>(
                 future: _profile,
                 builder: (_, snap) {
@@ -94,48 +217,42 @@ class _HomePageState extends State<HomePage> {
                   if (snap.hasError) return Text(snap.error.toString());
                   if (snap.data == null) return Center(child: Text("Fail"));
                   final user = snap.data!;
-                  return ListTile(
-                    title: Text(user["username"]),
-                    subtitle: Text(user["email"]),
+                  // return ListTile(
+                  //   title: Text(user["user_name"] ?? "Unknown"),
+                  //   subtitle: Text(user["email"] ?? "Unknown"),
+                  // );
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+
+                    children: [
+                      SizedBox(width: 12),
+                      CircleAvatar(
+                        backgroundColor: Colors.grey.shade200,
+                        child: Icon(Icons.person, size: 18),
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        user['user_name'] ?? "Unknown",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      SizedBox(width: 180),
+                      Icon(Icons.expand_less),
+                    ],
                   );
+                  // Text(user['user_name'] ?? "Unknown");
                 },
               ),
             ),
           ],
         ),
       ),
+
       body: Column(
         children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: _sessions.length,
-              itemBuilder: (ctx, i) {
-                final sess = _sessions[i];
-                return ListTile(
-                  title: Text(
-                    sess.messages.first.text,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  subtitle: Text('Session ${i + 1}'),
-                  trailing: PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'open') {
-                        _openSession(sess);
-                      } else if (value == 'delete') {
-                        _deleteSession(i);
-                      }
-                    },
-                    itemBuilder:
-                        (_) => [
-                          PopupMenuItem(value: 'open', child: Text("Open")),
-                          PopupMenuItem(value: 'delete', child: Text('Delete')),
-                        ],
-                  ),
-                );
-              },
-            ),
-          ),
+          Expanded(child: Center(child: Text("Good Morning"))),
 
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -154,10 +271,16 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: Icon(Icons.send, color: Colors.black),
-                  onPressed: _sendMessage,
-                ),
+                _isSending
+                    ? SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                    : IconButton(
+                      icon: Icon(Icons.send, color: Colors.black),
+                      onPressed: _sendMessage,
+                    ),
               ],
             ),
           ),
@@ -166,3 +289,56 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
+// void _openSession(ChatSession session) {
+//   Navigator.push(
+//     context,
+//     MaterialPageRoute(builder: (_) => ChatPage(session: session, token: token,)),
+//   );
+// }
+//
+// void _startChat(String content) async {
+//   try {
+//     final response = await ChatService().startChat(content, _token!);
+//     final session = response['session']; // session info
+//     final messages = response['message']; // list of messages
+//
+//     // Mở trang ChatPage với session và message vừa gửi
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(
+//         builder: (_) => ChatPage(
+//           session: session,
+//           messages: messages, // Truyền tin nhắn cho ChatPage
+//         ),
+//       ),
+//     );
+//   } catch (error) {
+//     print('Error: $error');
+//   }
+// }
+// void _sendMessage() {
+//   // final text = _controller.text.trim();
+//   // if (text.isEmpty) return;
+//   //
+//   // // final session = ChatSession(
+//   // //   id: DateTime.now().millisecondsSinceEpoch.toString(),
+//   // //   messages: [ChatMessage(text: text, isUser: true)],
+//   // // );
+//   //
+//   // setState(() {
+//   //   _sessions.insert(0, session);
+//   // });
+//   // _controller.clear();
+//   //
+//   // Navigator.push(
+//   //   context,
+//   //   MaterialPageRoute(builder: (_) => ChatPage(session: session)),
+//   // );
+// }
+//
+// void _deleteSession(int index) {
+//   setState(() {
+//     _sessions.removeAt(index);
+//   });
+// }

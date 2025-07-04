@@ -2,57 +2,136 @@ import 'package:flutter/material.dart';
 import '../models/chat_message.dart';
 import '../models/chat_session.dart';
 import '../widgets/chat_bubble.dart';
+import '../services/chat_services.dart';
 
 class ChatPage extends StatefulWidget {
   final ChatSession session;
+  final String token;
 
-  ChatPage({required this.session});
+  const ChatPage({required this.session, required this.token, Key? key})
+    : super(key: key);
 
   @override
-  State<ChatPage> createState() => _ChatPageState();
+  _ChatPageState createState() => _ChatPageState();
 }
 
 class _ChatPageState extends State<ChatPage> {
-  late List<ChatMessage> _messages;
-  final TextEditingController _controller = TextEditingController();
+  final List<ChatMessage> _messages = []; // ① giữ state list
+  final _controller = TextEditingController();
+  final _scrollCtrl = ScrollController();
+  bool _isSending = false;
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    _messages = widget.session.messages;
+    _loadHistory(); // ② load 1 lần khi vào
   }
 
-  void _sendMessage() {
+  Future<void> _loadHistory() async {
+    try {
+      final history = await ChatService().getMessages(
+        widget.session.id,
+        widget.token,
+      );
+      setState(() {
+        _messages.addAll(history);
+        _loading = false;
+      });
+      _scrollToBottom();
+    } catch (e) {
+      setState(() => _loading = false);
+      print('Error loading history: $e');
+    }
+  }
+
+  void _scrollToBottom() {
+    // đảm bảo chạy sau khi build xong
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollCtrl.hasClients) {
+        _scrollCtrl.animateTo(
+          _scrollCtrl.position.maxScrollExtent,
+          duration: Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  Future<void> _sendMessage() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
+
+    // ✅ Optimistic update: thêm tin user ngay
     setState(() {
-      _messages.add(ChatMessage(text: text, isUser: true));
+      _messages.add(
+        ChatMessage(
+          id: null,
+          chatSessionId: widget.session.id,
+          sender: 'user',
+          sequenceNo: _messages.length + 1,
+          content: text,
+          createdAt: DateTime.now(),
+        ),
+      );
+      _isSending = true;
+      _controller.clear();
     });
-    _controller.clear();
+    _scrollToBottom();
+
+    // ✅ Gọi /continue, parse Map → List<ChatMessage>
+    try {
+      final respMap = await ChatService().continueChat(
+        widget.session.id,
+        text,
+        widget.token,
+      );
+      // final raw = respMap['messages'] as List<dynamic>;
+      // final List<ChatMessage> newList = raw
+      //     .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
+      //     .toList();
+      final botMessage = ChatMessage.fromJson(
+        respMap,
+      ); // Vì API trả về 1 object, không phải list
+      print(botMessage);
+      //_loadHistory();
+      // cập nhật toàn bộ list mới
+      setState(() {
+        _messages.add(botMessage);
+        _isSending = false;
+      });
+      _scrollToBottom();
+    } catch (e) {
+      print('Error sending message: $e');
+      // nếu muốn: show Snackbar hoặc rollback optimistic update
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollCtrl.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Session ${widget.session.id}'),
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
+      appBar: AppBar(title: Text(widget.session.title)),
       body: Column(
         children: [
-
           Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: _messages.length,
-              itemBuilder: (ctx, i) => ChatBubble(message: _messages[i]),
-            ),
+            child:
+                _loading
+                    ? Center(child: CircularProgressIndicator())
+                    : ListView.builder(
+                      controller: _scrollCtrl,
+                      itemCount: _messages.length,
+                      itemBuilder: (_, i) => ChatBubble(message: _messages[i]),
+                    ),
           ),
 
+          // Row nhập message
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
@@ -65,15 +144,22 @@ class _ChatPageState extends State<ChatPage> {
                   child: TextField(
                     controller: _controller,
                     decoration: InputDecoration(
-                      hintText: "Ask anything",
+                      hintText: "Ask your question",
                       border: InputBorder.none,
                     ),
+                    onSubmitted: (_) => _sendMessage(),
                   ),
                 ),
-                IconButton(
-                  icon: Icon(Icons.send, color: Theme.of(context).primaryColor),
-                  onPressed: _sendMessage,
-                ),
+                _isSending
+                    ? SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                    : IconButton(
+                      icon: Icon(Icons.send, color: Colors.black),
+                      onPressed: _sendMessage,
+                    ),
               ],
             ),
           ),
