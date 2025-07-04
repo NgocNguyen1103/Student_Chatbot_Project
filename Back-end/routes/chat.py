@@ -8,10 +8,19 @@ from models.chat_sessions import ChatSessions
 from models.chat_messages import ChatMessages, RoleEnum
 import utils.security as Security
 from typing import List
+import requests
+router = APIRouter()
 
-router = APIRouter(
-    
-)
+def call_model_server(user_message: str, history: list[tuple[str, str]]) -> str:
+    try:
+        response = requests.post("http://localhost:8001/rag_answer", json={
+            "user_message": user_message,
+            "chat_history": history
+        })
+        return response.json()["answer"]
+    except Exception as e:
+        print(f"Error calling model server: {e}")
+        return "Error connectting with chatbot model."
 
 @router.post('/newchat', tags=['chat'], response_model=dict)
 def start_chat(chat: SchemaChats.ChatStart, db: Session= Depends(get_db), current_user: UserModels = Depends(Security.get_current_user)):
@@ -26,14 +35,24 @@ def start_chat(chat: SchemaChats.ChatStart, db: Session= Depends(get_db), curren
         content = chat.content
     )
     db.add(first_message)
+
+    response =  call_model_server(chat.content, [])
+    bot_message = ChatMessages(
+        chat_session_id = new_session.id,
+        sender = RoleEnum.BOT,
+        sequence_no = 2,
+        content = response
+    )
+    db.add(bot_message)
     new_session.last_message = datetime.now()
 
     db.commit()
     db.refresh(new_session)
     db.refresh(first_message)
+    db.refresh(bot_message)
     return {
         "session": SchemaChats.ChatSessionOut.from_orm(new_session),
-        "message": SchemaChats.ChatMessageOut.from_orm(first_message),
+        "message": SchemaChats.ChatMessageOut.from_orm(bot_message)
     }
 
 
@@ -45,15 +64,18 @@ def continue_chat(chat: SchemaChats.ChatContinue, db: Session = Depends(get_db),
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session invalid or user invalid",
         )
-    last_message = (
-        db.query(ChatMessages)
-        .filter(
-            ChatMessages.chat_session_id == chat.chat_session_id
-        )
-        .order_by(ChatMessages.sequence_no.desc())
-        .first()
-    )
+    messages = db.query(ChatMessages).filter(ChatMessages.chat_session_id == chat.chat_session_id).order_by(ChatMessages.sequence_no.asc()).all()
 
+    history = []
+    temp = None
+    for m in messages:
+        if m.sender == RoleEnum.USER:
+            temp = m.content
+        elif m.sender == RoleEnum.BOT and temp:
+            history.append((temp, m.content))
+            temp = None
+
+    last_message = messages[-1] if messages else None
     new_sequence_no = last_message.sequence_no + 1 if last_message else 1
 
     new_message = ChatMessages(
@@ -63,11 +85,20 @@ def continue_chat(chat: SchemaChats.ChatContinue, db: Session = Depends(get_db),
         content = chat.content
     )
     db.add(new_message)
+
+    response = call_model_server(chat.content, history)
+    bot_message = ChatMessages(
+        chat_session_id = chat_session.id,
+        sender = RoleEnum.BOT,
+        sequence_no = new_sequence_no + 1,
+        content = response
+    )
+    db.add(bot_message)
     chat_session.last_message = datetime.now()
 
     db.commit()
-    db.refresh(new_message)
-    return new_message
+    db.refresh(bot_message)
+    return bot_message
 
 
 @router.get('/get_chat_sessions', tags=['chat'], response_model=List[SchemaChats.ChatSessionOut])
@@ -76,9 +107,8 @@ def get_sessions(db: Session = Depends(get_db), current_user: UserModels = Depen
 
         chat_sessions = db.query(ChatSessions).filter(ChatSessions.user_id == current_user.id).all()
 
-        if not chat_sessions:
-            return {"message": "No Chat Session  available"}
         
+        print(chat_sessions)
         return chat_sessions
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -110,8 +140,6 @@ def get_old_messages(chat_session_id: int,db: Session = Depends(get_db), current
                     .order_by(ChatMessages.sequence_no)
                     .all())
         
-        if not messages:
-            return {"message": "No message"}
         
         return messages
     except Exception as e:

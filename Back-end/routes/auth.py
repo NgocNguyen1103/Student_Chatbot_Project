@@ -49,4 +49,5 @@ def read_me(current_user: ModelUsers = Depends(Security.get_current_user)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated"
         )
+    print(current_user)
     return current_user

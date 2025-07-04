@@ -6,7 +6,7 @@ from database import Base
 
 class RoleEnum(enum.Enum):
     USER = "user"
-    BOT = "chatbot"
+    BOT = "bot"
 
 class ChatMessages(Base):
     __tablename__ = "chat_messages"

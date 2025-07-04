@@ -4,6 +4,7 @@ import 'package:student_chatbot/services/chat_services.dart';
 import '../models/chat_session.dart';
 import '../models/chat_message.dart';
 import './chat_page.dart';
+import '../widgets/settings_bottom_sheet.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -200,50 +201,55 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
             ),
+            GestureDetector(
+              onTap: () {
+                //Navigator.pop(context); // Close drawer
+                showSettingsBottomSheet(context);
+              },
+              child: Container(
+                height: 65,
+                alignment: Alignment.center,
 
-            Container(
-              height: 65,
-              alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Color(0xFFFDFEFF),
+                  border: Border(top: BorderSide(color: Colors.grey.shade300)),
+                ),
 
-              decoration: BoxDecoration(
-                color: Color(0xFFFDFEFF),
-                border: Border(top: BorderSide(color: Colors.grey.shade300)),
-              ),
-              child: FutureBuilder<Map<String, dynamic>?>(
-                future: _profile,
-                builder: (_, snap) {
-                  if (snap.connectionState != ConnectionState.done)
-                    return Center(child: CircularProgressIndicator());
-                  if (snap.hasError) return Text(snap.error.toString());
-                  if (snap.data == null) return Center(child: Text("Fail"));
-                  final user = snap.data!;
-                  // return ListTile(
-                  //   title: Text(user["user_name"] ?? "Unknown"),
-                  //   subtitle: Text(user["email"] ?? "Unknown"),
-                  // );
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
+                child: FutureBuilder<Map<String, dynamic>?>(
+                  future: _profile,
+                  builder: (_, snap) {
+                    if (snap.connectionState != ConnectionState.done)
+                      return Center(child: CircularProgressIndicator());
+                    if (snap.hasError) return Text(snap.error.toString());
+                    if (snap.data == null) return Center(child: Text("Fail"));
+                    final user = snap.data!;
+                    // return ListTile(
+                    //   title: Text(user["user_name"] ?? "Unknown"),
+                    //   subtitle: Text(user["email"] ?? "Unknown"),
+                    // );
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
 
-                    children: [
-                      SizedBox(width: 12),
-                      CircleAvatar(
-                        backgroundColor: Colors.grey.shade200,
-                        child: Icon(Icons.person, size: 18),
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        user['user_name'] ?? "Unknown",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w400,
+                      children: [
+                        SizedBox(width: 12),
+                        CircleAvatar(
+                          backgroundColor: Colors.grey.shade200,
+                          child: Icon(Icons.person, size: 18),
                         ),
-                      ),
-                      SizedBox(width: 180),
-                      Icon(Icons.expand_less),
-                    ],
-                  );
-                  // Text(user['user_name'] ?? "Unknown");
-                },
+                        SizedBox(width: 8),
+                        Text(
+                          user['user_name'] ?? "Unknown",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        SizedBox(width: 180),
+                        Icon(Icons.expand_less),
+                      ],
+                    );
+                  },
+                ),
               ),
             ),
           ],
