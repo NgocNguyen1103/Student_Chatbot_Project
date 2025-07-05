@@ -168,90 +168,118 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       SizedBox(height: 5),
+                      // Expanded(
+                      //   child: ListView.builder(
+                      //     padding: EdgeInsets.zero,
+                      //     itemCount: sessionsToShow.length,
+                      //     itemBuilder: (context, index) {
+                      //       final session = sessionsToShow[index];
+                      //       return ListTile(
+                      //         title: Text(session.title),
+                      //         subtitle: Text("Session #${session.id}"),
+                      //         onTap: () {
+                      //           _searchController.clear();
+                      //           _searchTerm = '';
+                      //           Navigator.pop(context); // Close drawer
+                      //           Navigator.push(
+                      //             context,
+                      //             MaterialPageRoute(
+                      //               builder:
+                      //                   (_) => ChatPage(
+                      //                     session: session,
+                      //                     token: token,
+                      //                   ),
+                      //             ),
+                      //           );
+                      //         },
+                      //       );
+                      //     },
+                      //   ),
+                      // ),
                       Expanded(
                         child: ListView.builder(
                           padding: EdgeInsets.zero,
                           itemCount: sessionsToShow.length,
                           itemBuilder: (context, index) {
                             final session = sessionsToShow[index];
-                            return ListTile(
-                              title: Text(session.title),
-                              subtitle: Text("Session #${session.id}"),
-                              onTap: () {
-                                _searchController.clear();
-                                _searchTerm = '';
-                                Navigator.pop(context); // Close drawer
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => ChatPage(
-                                          session: session,
-                                          token: token,
-                                        ),
-                                  ),
-                                );
-                              },
+                            return Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                splashColor: Colors.grey.withOpacity(0.5),       // hiệu ứng gợn sáng
+                                highlightColor: Colors.grey.withOpacity(0.2),    // hiệu ứng nhấn giữ
+                                onTap: () {
+                                  _searchController.clear();
+                                  _searchTerm = '';
+                                  Navigator.pop(context); // Close drawer
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ChatPage(
+                                        session: session,
+                                        token: token,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: ListTile(
+                                  title: Text(session.title),
+                                  subtitle: Text("Session #${session.id}"),
+                                ),
+                              ),
                             );
                           },
                         ),
                       ),
+
                     ],
                   );
                 },
               ),
             ),
-            GestureDetector(
-              onTap: () {
-                //Navigator.pop(context); // Close drawer
-                showSettingsBottomSheet(context);
-              },
-              child: Container(
-                height: 65,
-                alignment: Alignment.center,
+            SizedBox(
+              height: 65,
+              child: FutureBuilder<Map<String, dynamic>?>(
+                future: _profile,
+                builder: (_, snap) {
+                  if (snap.connectionState != ConnectionState.done)
+                    return Center(child: CircularProgressIndicator());
+                  if (snap.hasError) return Text(snap.error.toString());
+                  if (snap.data == null) return Center(child: Text("Fail"));
+                  final user = snap.data!;
 
-                decoration: BoxDecoration(
-                  color: Color(0xFFFDFEFF),
-                  border: Border(top: BorderSide(color: Colors.grey.shade300)),
-                ),
-
-                child: FutureBuilder<Map<String, dynamic>?>(
-                  future: _profile,
-                  builder: (_, snap) {
-                    if (snap.connectionState != ConnectionState.done)
-                      return Center(child: CircularProgressIndicator());
-                    if (snap.hasError) return Text(snap.error.toString());
-                    if (snap.data == null) return Center(child: Text("Fail"));
-                    final user = snap.data!;
-                    // return ListTile(
-                    //   title: Text(user["user_name"] ?? "Unknown"),
-                    //   subtitle: Text(user["email"] ?? "Unknown"),
-                    // );
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-
-                      children: [
-                        SizedBox(width: 12),
-                        CircleAvatar(
-                          backgroundColor: Colors.grey.shade200,
-                          child: Icon(Icons.person, size: 18),
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          user['user_name'] ?? "Unknown",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w400,
+                  return GestureDetector(
+                    onTap: () {
+                      showSettingsBottomSheet(context, user); //
+                    },
+                    child: Container(
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFFDFEFF),
+                        border: Border(top: BorderSide(color: Colors.grey.shade300)),
+                      ),
+                      child: Row(
+                        children: [
+                          SizedBox(width: 12),
+                          CircleAvatar(
+                            backgroundColor: Colors.grey.shade200,
+                            child: Icon(Icons.person, size: 18),
                           ),
-                        ),
-                        SizedBox(width: 180),
-                        Icon(Icons.expand_less),
-                      ],
-                    );
-                  },
-                ),
+                          SizedBox(width: 8),
+                          Text(
+                            user['user_name'] ?? "Unknown",
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
+                          ),
+                          SizedBox(width: 180,),
+                          Icon(Icons.expand_less),
+                          SizedBox(width: 12),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
-            ),
+            )
+
           ],
         ),
       ),
