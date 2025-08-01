@@ -214,10 +214,11 @@ class _HomePageState extends State<HomePage> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => ChatPage(
-                                        session: session,
-                                        token: token,
-                                      ),
+                                      builder:
+                                          (_) => ChatPage(
+                                            session: session,
+                                            token: token,
+                                          ),
                                     ),
                                   );
                                 },
@@ -230,7 +231,6 @@ class _HomePageState extends State<HomePage> {
                           },
                         ),
                       ),
-
                     ],
                   );
                 },
