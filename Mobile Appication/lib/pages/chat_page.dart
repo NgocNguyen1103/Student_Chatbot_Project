@@ -16,7 +16,7 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  final List<ChatMessage> _messages = []; // ① giữ state list
+  final List<ChatMessage> _messages = []; //
   final _controller = TextEditingController();
   final _scrollCtrl = ScrollController();
   bool _isSending = false;
@@ -25,7 +25,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
-    _loadHistory(); // ② load 1 lần khi vào
+    _loadHistory(); //
   }
 
   Future<void> _loadHistory() async {
@@ -62,7 +62,6 @@ class _ChatPageState extends State<ChatPage> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
-    // ✅ Optimistic update: thêm tin user ngay
     setState(() {
       _messages.add(
         ChatMessage(
@@ -79,23 +78,17 @@ class _ChatPageState extends State<ChatPage> {
     });
     _scrollToBottom();
 
-    // ✅ Gọi /continue, parse Map → List<ChatMessage>
     try {
       final respMap = await ChatService().continueChat(
         widget.session.id,
         text,
         widget.token,
       );
-      // final raw = respMap['messages'] as List<dynamic>;
-      // final List<ChatMessage> newList = raw
-      //     .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
-      //     .toList();
+
       final botMessage = ChatMessage.fromJson(
         respMap,
       ); // Vì API trả về 1 object, không phải list
       print(botMessage);
-      //_loadHistory();
-      // cập nhật toàn bộ list mới
       setState(() {
         _messages.add(botMessage);
         _isSending = false;
@@ -103,7 +96,6 @@ class _ChatPageState extends State<ChatPage> {
       _scrollToBottom();
     } catch (e) {
       print('Error sending message: $e');
-      // nếu muốn: show Snackbar hoặc rollback optimistic update
     }
   }
 
@@ -131,7 +123,6 @@ class _ChatPageState extends State<ChatPage> {
                     ),
           ),
 
-          // Row nhập message
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(

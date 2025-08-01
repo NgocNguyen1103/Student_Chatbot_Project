@@ -29,26 +29,15 @@ class _HomePageState extends State<HomePage> {
     final content = _controller.text;
     if (content.isEmpty) return;
     setState(() {
-      _isSending = true; // Đánh dấu là đang gửi
+      _isSending = true; //
     });
 
-    // Gọi API tạo chat
     try {
-      final response = await ChatService().startChat(content, token); // Gọi API
-      // final session = response['session'];  // session info
-      // final messages = response['message'];  // messages từ bot và user
-
-      // 1. Lấy phần `session` ra dưới dạng Map
+      final response = await ChatService().startChat(content, token);
       final Map<String, dynamic> sessionJson =
           response['session'] as Map<String, dynamic>;
-      // 2. Chuyển Map → ChatSession bằng factory constructor
       final ChatSession session = ChatSession.fromJson(sessionJson);
       print('Parsed session id: ${session.id}, title: ${session.title}');
-      // final List<dynamic> msgsJson = response['messages'] as List<dynamic>;
-      // final List<ChatMessage> messages = msgsJson
-      //     .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
-      //     .toList();
-      // Sau khi có response, mở ChatPage
       _controller.clear();
       Navigator.push(
         context,
@@ -58,10 +47,9 @@ class _HomePageState extends State<HomePage> {
       );
     } catch (error) {
       print("Error: $error");
-      // Bạn có thể hiển thị lỗi bằng snackbar nếu muốn
     } finally {
       setState(() {
-        _isSending = false; // ✅ Cho phép gửi lại
+        _isSending = false;
       });
     }
   }
@@ -76,7 +64,7 @@ class _HomePageState extends State<HomePage> {
     _profile = AuthService().getProfile(token);
     _sessionFuture = ChatService().getSessions(token);
     _sessionFuture = ChatService().getSessions(token).then((sessions) {
-      _filteredSessions = sessions; // Gán ban đầu
+      _filteredSessions = sessions;
       return sessions;
     });
   }
@@ -168,34 +156,6 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       SizedBox(height: 5),
-                      // Expanded(
-                      //   child: ListView.builder(
-                      //     padding: EdgeInsets.zero,
-                      //     itemCount: sessionsToShow.length,
-                      //     itemBuilder: (context, index) {
-                      //       final session = sessionsToShow[index];
-                      //       return ListTile(
-                      //         title: Text(session.title),
-                      //         subtitle: Text("Session #${session.id}"),
-                      //         onTap: () {
-                      //           _searchController.clear();
-                      //           _searchTerm = '';
-                      //           Navigator.pop(context); // Close drawer
-                      //           Navigator.push(
-                      //             context,
-                      //             MaterialPageRoute(
-                      //               builder:
-                      //                   (_) => ChatPage(
-                      //                     session: session,
-                      //                     token: token,
-                      //                   ),
-                      //             ),
-                      //           );
-                      //         },
-                      //       );
-                      //     },
-                      //   ),
-                      // ),
                       Expanded(
                         child: ListView.builder(
                           padding: EdgeInsets.zero,
@@ -205,8 +165,10 @@ class _HomePageState extends State<HomePage> {
                             return Material(
                               color: Colors.transparent,
                               child: InkWell(
-                                splashColor: Colors.grey.withOpacity(0.5),       // hiệu ứng gợn sáng
-                                highlightColor: Colors.grey.withOpacity(0.2),    // hiệu ứng nhấn giữ
+                                splashColor: Colors.grey.withOpacity(0.5),
+                                // hiệu ứng gợn sáng
+                                highlightColor: Colors.grey.withOpacity(0.2),
+                                // hiệu ứng nhấn giữ
                                 onTap: () {
                                   _searchController.clear();
                                   _searchTerm = '';
@@ -255,7 +217,9 @@ class _HomePageState extends State<HomePage> {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: Color(0xFFFDFEFF),
-                        border: Border(top: BorderSide(color: Colors.grey.shade300)),
+                        border: Border(
+                          top: BorderSide(color: Colors.grey.shade300),
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -267,9 +231,12 @@ class _HomePageState extends State<HomePage> {
                           SizedBox(width: 8),
                           Text(
                             user['user_name'] ?? "Unknown",
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w400,
+                            ),
                           ),
-                          SizedBox(width: 180,),
+                          SizedBox(width: 180),
                           Icon(Icons.expand_less),
                           SizedBox(width: 12),
                         ],
@@ -278,8 +245,7 @@ class _HomePageState extends State<HomePage> {
                   );
                 },
               ),
-            )
-
+            ),
           ],
         ),
       ),
@@ -323,56 +289,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
-// void _openSession(ChatSession session) {
-//   Navigator.push(
-//     context,
-//     MaterialPageRoute(builder: (_) => ChatPage(session: session, token: token,)),
-//   );
-// }
-//
-// void _startChat(String content) async {
-//   try {
-//     final response = await ChatService().startChat(content, _token!);
-//     final session = response['session']; // session info
-//     final messages = response['message']; // list of messages
-//
-//     // Mở trang ChatPage với session và message vừa gửi
-//     Navigator.push(
-//       context,
-//       MaterialPageRoute(
-//         builder: (_) => ChatPage(
-//           session: session,
-//           messages: messages, // Truyền tin nhắn cho ChatPage
-//         ),
-//       ),
-//     );
-//   } catch (error) {
-//     print('Error: $error');
-//   }
-// }
-// void _sendMessage() {
-//   // final text = _controller.text.trim();
-//   // if (text.isEmpty) return;
-//   //
-//   // // final session = ChatSession(
-//   // //   id: DateTime.now().millisecondsSinceEpoch.toString(),
-//   // //   messages: [ChatMessage(text: text, isUser: true)],
-//   // // );
-//   //
-//   // setState(() {
-//   //   _sessions.insert(0, session);
-//   // });
-//   // _controller.clear();
-//   //
-//   // Navigator.push(
-//   //   context,
-//   //   MaterialPageRoute(builder: (_) => ChatPage(session: session)),
-//   // );
-// }
-//
-// void _deleteSession(int index) {
-//   setState(() {
-//     _sessions.removeAt(index);
-//   });
-// }
